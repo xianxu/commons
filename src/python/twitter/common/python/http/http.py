@@ -50,8 +50,8 @@ def deadline(fn, *args, **kw):
 
 
 class Web(object):
-  NS_TIMEOUT = Amount(5, Time.SECONDS)
-  CONN_TIMEOUT = Amount(1, Time.SECONDS)
+  NS_TIMEOUT = Amount(20, Time.SECONDS)
+  CONN_TIMEOUT = Amount(20, Time.SECONDS)
   SCHEME_TO_PORT = {
     'ftp': 21,
     'http': 80,
