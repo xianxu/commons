@@ -41,6 +41,17 @@ class ZincUtils(object):
   Instances are immutable, and all methods are reentrant (assuming that the java_runner is).
   """
   def __init__(self, context, java_runner, color):
+    def identify_zinc_jars(compiler_classpath, zinc_classpath):
+      """Find the named jars in the compiler and zinc classpaths.
+
+      TODO: When profiles migrate to regular pants jar() deps instead of ivy.xml files we can make
+            these mappings explicit instead of deriving them by jar name heuristics.
+      """
+      ret = OrderedDict()
+      ret.update(ZincUtils.identify_jars(self._compiler_jar_flags, compiler_classpath))
+      ret.update(ZincUtils.identify_jars(self._zinc_jar_flags, zinc_classpath))
+      return ret
+
     self._context = context
     self._java_runner = java_runner
     self._color = color
@@ -52,8 +63,24 @@ class ZincUtils(object):
     self._plugins_profile = context.config.get('scala-compile', 'scalac-plugins-profile')
 
     self._main = context.config.get('scala-compile', 'main')
+    self._scala_extra = context.config.get('scala-compile', 'zinc_scala_extra')
+    self._javac_args = context.config.getlist('scala-compile', 'javac_args', default=[])
     self._scalac_args = context.config.getlist('scala-compile', 'args')
     self._jvm_args = context.config.getlist('scala-compile', 'jvm_args')
+
+    # These are the name mappings of the various jars zinc needs. It's a map from zinc flag name
+    # to a single prefix of the jar name that needs to be passed to the zinc flag.
+    self._compiler_jar_flags = {
+      'scala-library': 'scala-library',
+      'scala-compiler': 'scala-compiler'
+    }  # Jars needed by scala compiler
+    self._zinc_jar_flags = {
+      'compiler-interface': 'compiler-interface',
+      'sbt-interface': 'sbt-interface'
+    }  # Other jars zinc needs pointing to.
+    # Extra param needed for scala 2.10+
+    if self._scala_extra is not None:
+      self._compiler_jar_flags['scala-extra'] = self._scala_extra
 
     if context.options.scala_compile_warnings:
       self._scalac_args.extend(context.config.getlist('scala-compile', 'warning_args'))
@@ -68,9 +95,9 @@ class ZincUtils(object):
     self._plugin_jars = (classpath_for_profile(self._plugins_profile) if self._plugins_profile
                          else [])
 
-    zinc_jars = ZincUtils.identify_zinc_jars(self._compiler_classpath, self._zinc_classpath)
+    self._zinc_jars = identify_zinc_jars(self._compiler_classpath, self._zinc_classpath)
     self._zinc_jar_args = []
-    for (name, jarpath) in zinc_jars.items():  # The zinc jar names are also the flag names.
+    for (name, jarpath) in self._zinc_jars.items():  # The zinc jar names are also the flag names.
       self._zinc_jar_args.extend(['-%s' % name, jarpath])
 
     # Allow multiple flags and also comma-separated values in a single flag.
@@ -105,10 +132,11 @@ class ZincUtils(object):
     return self._java_runner(self._main, classpath=self._zinc_classpath, args=zinc_args,
                              jvmargs=self._jvm_args)
 
-  def compile(self, classpath, sources, output_dir, analysis_file, upstream_analysis_files,
-              depfile):
-    # To pass options to scalac simply prefix with -S.
+  def compile(self, classpath, sources, output_dir, analysis_file,
+              upstream_analysis_files, depfile):
+    # To pass options through to scalac, prefix with -S and javac prefix with -C.
     args = ['-S' + x for x in self._scalac_args]
+    args.extend('-C' + x for x in self._javac_args)
 
     if len(upstream_analysis_files) > 0:
       args.extend(['-analysis-map',
@@ -210,29 +238,13 @@ class ZincUtils(object):
       ''' % (target.plugin, target.classname)).strip())
     return basedir, _PLUGIN_INFO_FILE
 
-  # These are the names of the various jars zinc needs. They are, conveniently and
-  # non-coincidentally, the names of the flags used to pass the jar locations to zinc.
-  compiler_jar_names = [ 'scala-library', 'scala-compiler' ]  # Compiler version.
-  zinc_jar_names = [ 'compiler-interface', 'sbt-interface' ]  # Other jars zinc needs pointing to.
-
   @staticmethod
-  def identify_zinc_jars(compiler_classpath, zinc_classpath):
-    """Find the named jars in the compiler and zinc classpaths.
-
-    TODO: When profiles migrate to regular pants jar() deps instead of ivy.xml files we can make
-          these mappings explicit instead of deriving them by jar name heuristics.
-    """
-    ret = OrderedDict()
-    ret.update(ZincUtils.identify_jars(ZincUtils.compiler_jar_names, compiler_classpath))
-    ret.update(ZincUtils.identify_jars(ZincUtils.zinc_jar_names, zinc_classpath))
-    return ret
-
-  @staticmethod
-  def identify_jars(names, jars):
+  def identify_jars(flag_map, jars):
     jars_by_name = {}
     jars_and_filenames = [(x, os.path.basename(x)) for x in jars]
 
-    for name in names:
+    # TODO (xx): extend this if we ever need to pass in more than one jar as a zinc flag
+    for key, name in flag_map.items():
       jar_for_name = None
       for jar, filename in jars_and_filenames:
         if filename.startswith(name):
@@ -241,7 +253,7 @@ class ZincUtils(object):
       if jar_for_name is None:
         raise TaskError("Couldn't find jar named %s" % name)
       else:
-        jars_by_name[name] = jar_for_name
+        jars_by_name[key] = jar_for_name
     return jars_by_name
 
   def find_plugins(self, plugin_names):
