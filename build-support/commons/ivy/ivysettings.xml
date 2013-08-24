@@ -18,10 +18,15 @@ limitations under the License.
 -->
 
 <ivysettings>
-  <property name="ivy.cache.dir" value="${user.home}/.ivy2/twitter-commons" override="false"/>
+  <property name="ivy.cache.dir" value="${user.home}/.ivy2/pants" override="false"/>
 
   <macrodef name="_remote_resolvers">
     <chain returnFirst="true">
+      <ibiblio name="typesafe"
+               m2compatible="true"
+               usepoms="true"
+	       root="https://oss.sonatype.org/content/groups/scala-tools/"/>
+
       <ibiblio name="maven2"
                m2compatible="true"
                usepoms="true"
