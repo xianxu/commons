@@ -6,6 +6,11 @@ def make_lib(name, rev, org='com.twitter'):
     ]
   )
 
+def alias(source, target):
+  return jar_library(name = target,
+    dependencies = [ pants(':' + source) ])
+
+
 def twitter_lib(name, rev):
   return make_lib(name, rev, 'com.twitter')
 
@@ -16,7 +21,9 @@ scala_lib('jline', '2.10.2')
 scala_lib('scala-library', '2.10.2')
 scala_lib('scala-compiler', '2.10.2')
 scala_lib('scala-reflect', '2.10.2')
+scala_lib('scalap', '2.10.2')
 
+make_lib('commons-io', '2.1', 'commons-io')
 make_lib('commons-codec', '1.8', 'commons-codec')
 make_lib('commons-codec', '1.5', 'commons-codec')
 make_lib('commons-collections', '3.2.1', 'commons-collections')
@@ -42,6 +49,9 @@ STOREHAUS_REV = '0.4.1'
 twitter_lib('util-core_2.10', UTIL_REV)
 twitter_lib('util-codec_2.10', UTIL_REV)
 twitter_lib('util-thrift_2.10', UTIL_REV)
+twitter_lib('util-jvm_2.10', UTIL_REV)
+alias('util-core_2.10', 'util-core')
+alias('util-jvm_2.10', 'util-jvm')
 
 twitter_lib('finagle-core_2.10', FINAGLE_REV)
 twitter_lib('finagle-memcached_2.10', FINAGLE_REV)
@@ -75,6 +85,72 @@ jar_library(name='scala-runtime',
     pants('3rdparty:scala-reflect'),
   ]
 )
+
+make_lib('jsr305', '1.3.9', 'com.google.code.findbugs')
+
+jar_library(
+  name= 'guava',
+  dependencies=[
+    jar(org='com.google.guava', name='guava', rev='14.0.1').with_sources(),
+    jar(org='javax.inject', name='javax.inject', rev='1').with_sources(),
+
+    # Defined in provided scope so we provide here.
+    pants(':jsr305'),
+  ]
+)
+
+jar_library(name = 'guice',
+            dependencies = [
+              jar(
+                org = 'com.google.inject', name = 'guice', rev = '3.0',
+                apidocs = 'http://google-guice.googlecode.com/svn/tags/3.0/javadoc/'
+              ).with_sources()
+            ]
+           )
+
+jar_library(name = 'jetty',
+            dependencies = [
+              jar(org = 'org.mortbay.jetty', name = 'jetty', rev = '6.1.25').with_sources()
+            ]
+           )
+
+jar_library(name = 'servlet-api',
+            dependencies = [
+              jar(org = 'javax.servlet', name = 'servlet-api', rev = '2.5').with_sources()
+            ]
+           )
+
+jar_library(name = 'stringtemplate',
+            dependencies = [
+              jar(org = 'org.antlr', name = 'stringtemplate', rev = '3.2.1').with_sources()
+            ]
+           )
+
+jar_library(name = 'gson',
+            dependencies = [
+              jar(org = 'com.google.code.gson', name = 'gson', rev = '2.2.2').with_sources()
+            ])
+
+jar_library(name = 'guice-multibindings',
+            dependencies = [
+              jar(org = 'com.google.inject.extensions', name = 'guice-multibindings', rev = '3.0')
+                .with_sources()
+            ]
+           )
+
+jar_library(name = 'guice-servlet',
+            dependencies = [
+              jar(org = 'com.google.inject.extensions', name = 'guice-servlet', rev = '3.0')
+                .with_sources()
+            ]
+           )
+
+jar_library(name = 'guice-throwingproviders',
+            dependencies = [
+              jar(org = 'com.google.inject.extensions', name = 'guice-throwingproviders', rev = '3.0')
+                .with_sources()
+            ]
+           )
 
 jar_library(
   name='antlr-3.4',
@@ -124,4 +200,20 @@ jar_library(
     pants(':slf4j-api'),
   ]
 )
+
+alias('thrift-0.5.0', 'thrift')
+
+jar_library(name = 'joda-time',
+            dependencies = [
+              jar(org = 'joda-time', name = 'joda-time', rev = '2.1'),
+              jar(org = 'org.joda', name = 'joda-convert', rev = '1.2')
+            ]
+           )
+
+jar_library(name = 'spy-memcached',
+            dependencies = [
+              jar(org = 'spy', name = 'spymemcached', rev = '2.8.1').with_sources()
+            ]
+           )
+
 

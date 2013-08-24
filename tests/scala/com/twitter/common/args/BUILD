@@ -16,7 +16,7 @@
 
 scala_tests(name = 'args',
   dependencies = [
-    '3rdparty:specs',
+    '3rdparty:specs_2.10',
     'src/scala/com/twitter/common/args:flags',
     'src/java/com/twitter/common/args:args',
   ],
