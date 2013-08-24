@@ -9,10 +9,25 @@ def make_lib(name, rev, org='com.twitter'):
 def twitter_lib(name, rev):
   return make_lib(name, rev, 'com.twitter')
 
+def scala_lib(name, rev):
+  return make_lib(name, rev, 'org.scala-lang')
+
+scala_lib('jline', '2.10.2')
+scala_lib('scala-library', '2.10.2')
+scala_lib('scala-compiler', '2.10.2')
+scala_lib('scala-reflect', '2.10.2')
+
+make_lib('commons-codec', '1.8', 'commons-codec')
 make_lib('commons-codec', '1.5', 'commons-codec')
 make_lib('commons-collections', '3.2.1', 'commons-collections')
 make_lib('commons-lang', '2.6', 'commons-lang')
 make_lib('commons-pool', '1.5.4', 'commons-pool')
+
+make_lib('junit', '4.10', 'junit')
+make_lib('mockito-all', '1.9.5', 'org.mockito')
+make_lib('specs_2.10', '1.6.9', 'org.scala-tools.testing')
+make_lib('scalacheck_2.10', '1.10.0', 'org.scalacheck')
+make_lib('scalatest_2.10', '1.9.1', 'org.scalatest')
 
 SLF4J_REV = '1.6.1'
 
@@ -45,13 +60,11 @@ twitter_lib('chill_2.10', '0.2.0')
 
 twitter_lib('twitter-server_2.10', '1.0.3')
 
-make_lib('commons-codec', '1.8', 'commons-codec')
-
 jar_library(name='tests',
   dependencies=[
     pants('3rdparty:junit'),
     pants('3rdparty:mockito-all'),
-    pants('3rdparty:specs'),
+    pants('3rdparty:specs_2.10'),
   ]
 )
 
