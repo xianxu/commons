@@ -24,7 +24,6 @@ from twitter.pants.goal.workunit import WorkUnit
 from twitter.pants.tasks import Task, TaskError
 from twitter.pants.tasks.jvm_task import JvmTask
 
-
 class SpecsRun(JvmTask):
   @classmethod
   def setup_parser(cls, option_group, args, mkflag):
@@ -51,6 +50,7 @@ class SpecsRun(JvmTask):
   def __init__(self, context):
     Task.__init__(self, context)
 
+    self.context = context
     self.profile = context.config.get('specs-run', 'profile')
     self.confs = context.config.getlist('specs-run', 'confs')
 
@@ -76,10 +76,16 @@ class SpecsRun(JvmTask):
         opts = ['--color'] if self.color else []
         opts.append('--specs=%s' % ','.join(tests))
 
+        cp = classpath=self.classpath(profile_classpath(self.profile), confs=self.confs,
+            exclusives_classpath=self.get_base_classpath_for_target(targets[0]))
+
+	self.context.log.debug('jvmargs: %s' % self.java_args)
+	self.context.log.debug('classpath: %s' % cp)
+	self.context.log.debug('opts: %s' % opts)
+
         result = runjava_indivisible(
           jvmargs=self.java_args,
-          classpath=self.classpath(profile_classpath(self.profile), confs=self.confs,
-              exclusives_classpath=self.get_base_classpath_for_target(targets[0])),
+	  classpath=cp,
           main='com.twitter.common.testing.ExplicitSpecsRunnerMain',
           opts=opts,
           workunit_factory=workunit_factory,

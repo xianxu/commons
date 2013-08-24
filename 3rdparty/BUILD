@@ -35,6 +35,7 @@ make_lib('mockito-all', '1.9.5', 'org.mockito')
 make_lib('specs_2.10', '1.6.9', 'org.scala-tools.testing')
 make_lib('scalacheck_2.10', '1.10.0', 'org.scalacheck')
 make_lib('scalatest_2.10', '1.9.1', 'org.scalatest')
+alias('mockito-all', 'mockito')
 
 SLF4J_REV = '1.6.1'
 
@@ -216,4 +217,23 @@ jar_library(name = 'spy-memcached',
             ]
            )
 
+jar_library(name = 'easymock',
+            dependencies = [
+              jar(org = 'org.easymock', name = 'easymock', rev = '3.1').with_sources()
+            ]
+           )
+
+jar_library(name = 'tl4j',
+            dependencies = [
+              jar(org = 'com.google.testing', name = 'test-libraries-for-java', rev = '1.1.1')
+                # tl4j by default pulls in junit-4.6, which conflicts with 4.10 needed by our
+                # testing code (e.g. ConcurrentJunitRunner). So exclude it here so that the junit
+                # target defined above is used instead. tl4j seems to be happy with junit-4.10.
+                .exclude(org = 'junit', name='junit')
+            ]
+           )
+
+
+jar_library(name = 'args4j',
+            dependencies = [ jar(org = 'args4j', name = 'args4j', rev = '2.0.16').with_sources() ])
 
