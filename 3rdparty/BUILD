@@ -36,6 +36,7 @@ make_lib('specs_2.10', '1.6.9', 'org.scala-tools.testing')
 make_lib('scalacheck_2.10', '1.10.0', 'org.scalacheck')
 make_lib('scalatest_2.10', '1.9.1', 'org.scalatest')
 alias('mockito-all', 'mockito')
+alias('specs_2.10', 'specs')
 
 SLF4J_REV = '1.6.1'
 
