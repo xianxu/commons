@@ -1,0 +1,3 @@
+The dependencies in 3rdparty doesn't contain all that's needed for the repo to build. It's
+intentional since I don't use those java libs, rather the intention's make a bare minimal pants
+repository.
