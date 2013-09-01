@@ -13,11 +13,14 @@ def alias(source, target):
   jar_library(name = target,
     dependencies = [ pants(':' + source) ])
 
-# Twitter scala lib
-def twitter_scala(name, rev):
-  make_lib('com.twitter', name, rev)
+def versioned_scala(org, name, rev):
+  make_lib(org, name, rev)
   a = '_'.join(name.split('_')[0:-1])
   alias(name, a)
+
+# Twitter scala lib
+def twitter_scala(name, rev):
+  versioned_scala('com.twitter', name, rev)
 
 def scala_lib(name, rev):
   make_lib('org.scala-lang', name, rev)
@@ -173,3 +176,4 @@ jar_library(name = 'tl4j',
 
 make_lib('args4j', 'args4j', '2.1.16')
 
+versioned_scala('com.typesafe.akka', 'akka-actor_2.10', '2.2.1')
