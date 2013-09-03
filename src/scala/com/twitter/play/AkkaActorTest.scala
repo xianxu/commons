@@ -22,12 +22,13 @@ object World {
   case object Done
   case object Count
 
-  val N = 10000
-  val M = 1000
-  val R = 3
+  val N = 100000
+  val M = 100
+  val R = 10
   //val N = 3
   //val M = 1
-  //val R = 1
+  //val R = 2
+  val B = N * R
 
   val t = System.currentTimeMillis
   def tick() = {
@@ -51,15 +52,15 @@ object World {
 
         def fire() {
           (0 until M) foreach { i =>
-            nodes(i) ! i
+            nodes(i) ! 0
           }
         }
 
-        (0 until R) foreach { _ => fire() }
+        fire()
 
       case Count =>
         finished += 1
-        if (finished == M * R)
+        if (finished == M)
           root ! Done
     }
   }
@@ -69,13 +70,14 @@ object World {
   }
 
   class Node(i: Int) extends Actor {
+    val next = (N + i + 1) % N
     def receive = {
-      case msg: Int if msg == (N + i + 1) % N =>
+      case msg: Int if msg == B =>
         //println(s"$i skipping, msg: $msg")
         ring ! Count
-      case msg =>
-        //println(s"$i passing $msg to ${(N+i+1)%N}")
-        nodes((N+i+1)%N) ! msg
+      case msg: Int =>
+        //println(s"$i passing ${msg + 1} to $next")
+        nodes(next) ! (msg + 1)
     }
   }
 }
